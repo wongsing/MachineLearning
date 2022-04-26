@@ -7,7 +7,7 @@ import matplotlib.pyplot as plt
 import scipy.optimize as opt
 #正则化
 #工厂主管，芯片的两次测试结果来判断，是否丢弃芯片
-path = open('D:\Pytest\ML_test\逻辑回归\ex2data2.txt')
+path = open('D:\Pytest\MachineLearning\ML_test\逻辑回归和正则化\ex2data2.txt')
 data2 = pd.read_csv(path,header=None,names=['Test 1','Test 2','Accepted'])
 print(data2.head())
 

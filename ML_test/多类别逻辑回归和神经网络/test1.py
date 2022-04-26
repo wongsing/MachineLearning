@@ -52,9 +52,30 @@ def cost(theta,X,y,learningRate):
 
     first = np.multiply(-y,np.log(sigmoid(X*theta.T)))
     second = np.multiply((1-y),np.log(1-sigmoid(X*theta.T)))
-    # reg = (learningRate)/2*len(X)*np.sum(np.power(theta[:,1:theta.shape[1]],2))
-    reg = theta.T.dot(theta) * learningRate/2*len(X)
+    reg = (learningRate/(2*len(X))*np.sum(np.power(theta[:,1:theta.shape[1]],2)))
+    # reg = theta.T.dot(theta) * learningRate/2*len(X)
+    #记住，点乘和矩阵乘法不同！
     return np.sum(first-second)/len(X)+reg
+
+def gradientReg(theta,X,y,learningRate):
+    theta = np.matrix(theta)
+    X =  np.matrix(X)
+    y = np.matrix(y)
+
+    parameters = int(theta.ravel().shape[1])
+    grad = np.zeros(parameters)
+
+    error = sigmoid(X*theta.T)-y
+
+    for i in range(parameters):
+        term = np.multiply(error,X[:,i])
+        #因为，正则化对参数惩罚只从1开始
+        if (i==0):
+            grad[i] = np.sum(term)/len(X)
+        else:
+            grad[i] = (np.sum(term)/len(X)) + ((learningRate / len(X)) * theta[:,i])
+        
+    return grad
 
 #向量化梯度下降???为什么要转置
 def gradient(theta,X,y,learningRate):
@@ -77,7 +98,7 @@ def one_vs_all(X,y,num_labels,lamda):
     rows = X.shape[0]
     params = X.shape[1] #400个参数--》共需401个参数
 
-    #k*(n+1)矩阵来作为k个分类器的参数
+    #k*(n+1)矩阵来作为k个分类器的参数         
     all_theta = np.zeros((num_labels,params+1))
 
     #加一列常数项x0=1
@@ -89,8 +110,9 @@ def one_vs_all(X,y,num_labels,lamda):
         y_i = np.array([1 if label == i else 0 for label in y])
         y_i = np.reshape(y_i , (rows,1))
 
-        fmin = minimize(fun=cost,x0=theta,args=(X,y_i,lamda),method='TNC',jac=gradient)
+        fmin = minimize(fun=cost,x0=theta,args=(X,y_i,lamda),method='TNC',jac=gradientReg)
         all_theta[i-1,:] = fmin.x
+     # result =  opt.fmin_tnc(func=cost,x0=theta,fprime=gradient,args=(X,y_i,lamda))
     
     return all_theta
 
@@ -113,7 +135,77 @@ print(X.shape, y_0.shape, theta.shape, all_theta.shape)
 print(np.unique(data['y']))
 
 all_theta = one_vs_all(data['X'],data['y'],10,1)
-print(all_theta)
+# print(all_theta)
+
+#计算每个类的概率，对于每个训练样本，并且输出类标签具有最高概率的类
+def predict_all(X,all_theta):
+    rows = X.shape[0]
+    params = X.shape[1]
+    num_labels = all_theta.shape[0]
+
+    #增加一列x0=1
+    X = np.insert(X,0,values=np.ones(rows),axis=1)
+
+    #转化成矩阵
+    X = np.matrix(X)
+    all_theta = np.matrix(all_theta)
+
+    #计算每个类在训练集找那个的概率
+    h = sigmoid(X*all_theta.T)
+
+    #找出概率最大的下标
+    h_argmax = np.argmax(h,axis=1)
+    #下标从0开始
+    h_argmax = h_argmax+1
+
+    return h_argmax
+
+# y_pred = predict_all(data['X'],all_theta)
+# print(classification_report(data['y'],y_pred))
+
+
+#前馈神经网络和预测
+#权重已经写好了,实现手写数字的预测，神经网络适合一对多分类一致，把h(x)中值最大的作为输出
+weight = loadmat("D:\Pytest\MachineLearning\ML_test\多类别逻辑回归和神经网络\ex3weights.mat")
+theta1,theta2 = weight['Theta1'],weight['Theta2']
+print(theta1.shape,theta2.shape)
+
+#插入常数项
+X2 = np.matrix(np.insert(data['X'],0,values=np.ones(X.shape[0]),axis=1))
+y2 = np.matrix(data['y'])
+print(X2.shape,y2.shape)
+
+#z2=x*theta.T
+#a2 = g(z2)=sigmoid(z2)
+#每一层输出相当于下一层的输入
+
+a1 = X2
+z2 = a1*theta1.T
+print(z2.shape)
+
+a2 = sigmoid(z2)
+print(a2.shape)
+
+a2 = np.insert(a2,0,values=np.ones(a2.shape[0]),axis=1)
+z3 = a2*theta2.T
+print(z3.shape)
+
+a3 = sigmoid(z3)
+print(a3)
+
+y_pred2 = np.argmax(a3,axis=1) + 1
+print(y_pred2.shape)
+
+print(classification_report(y2,y_pred2))
+
+
+
+
+
+
+
+
+
 
 
 
