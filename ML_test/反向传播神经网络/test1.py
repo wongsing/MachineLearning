@@ -125,13 +125,19 @@ def backprop(params,input_size,hidden_size,num_labels,X,y,learning_rate):
     X = np.matrix(X)
     y = np.matrix(y)
 
-    a1,z2,a2,z3,h = forward_propagate(X,theta1,theta2)
-
-    #参数重新构造矩阵???
     theta1 = np.matrix(np.reshape(params[:hidden_size*(input_size+1)],(hidden_size,(input_size+1))))
     theta2 = np.matrix(np.reshape(params[hidden_size*(input_size+1):],(num_labels,(hidden_size+1))))
 
-    #初始化
+    a1,z2,a2,z3,h = forward_propagate(X,theta1,theta2)
+
+    #参数重新构造矩阵:
+    # theta1，从0到hidden_size*(input_size+1)，将其转换为（隐藏层的神经单元数，输入变量数+1（bias））
+    #theta2，从hidden_size*(input_size+1)到最后一个，将其转换为(类标签数，隐藏层的神经单元数)
+    #也就是对应，一层的输出是下一层的输入，+1都是加一个bias=1
+
+
+
+    #初始化误差
     J = 0
     delta1 = np.zeros(theta1.shape)     #(25,401)
     delta2 = np.zeros(theta2.shape)     #(10,26)
@@ -145,7 +151,7 @@ def backprop(params,input_size,hidden_size,num_labels,X,y,learning_rate):
     J = J/m
 
     #反向传播计算，还不够清晰，得再理一遍
-    for t in m:
+    for t in range(m):
         a1t = a1[t,:] #(1,401)
         z2t = z2[t,:] #(1,25)
         a2t = a2[t,:] #(1,26)
@@ -174,11 +180,13 @@ def backpropReg(params,input_size,hidden_size,num_labels,X,y,learning_rate):
     X = np.matrix(X)
     y = np.matrix(y)
 
+    theta1,theta2 = weight['Theta1'],weight['Theta2']
+    
+    a1,z2,a2,z3,h = forward_propagate(X,theta1,theta2)
+
     #参数重新构造矩阵???
     theta1 = np.matrix(np.reshape(params[:hidden_size*(input_size+1)],(hidden_size,(input_size+1))))
     theta2 = np.matrix(np.reshape(params[hidden_size*(input_size+1):],(num_labels,(hidden_size+1))))
-
-    a1,z2,a2,z3,h = forward_propagate(X,theta1,theta2)
 
     #初始化
     J = 0
@@ -254,3 +262,4 @@ for r in range(5):
         ax_array[r,c].matshow(np.array(hidden_layer[5*r+c].reshape((20,20))),cmap=matplotlib.cm.binary)
         plt.xticks(np.array([]))
         plt.yticks(np.array([]))
+plt.plot()
